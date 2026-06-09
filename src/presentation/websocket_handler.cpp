@@ -14,10 +14,19 @@ void WebSocketHandler::handle(tcp::socket socket, http::request<http::string_bod
     const std::string hello = target == "/notifications" ? "notifications connected" : "chat connected";
     ws.write(boost::asio::buffer(hello));
 
-    boost::beast::flat_buffer buffer;
-    ws.read(buffer);
-    ws.text(true);
-    ws.write(buffer.data());
+    for (;;) {
+        boost::beast::flat_buffer buffer;
+        boost::beast::error_code ec;
+        ws.read(buffer, ec);
+        if (ec == websocket::error::closed) {
+            break;
+        }
+        if (ec) {
+            break;
+        }
+        ws.text(true);
+        ws.write(buffer.data());
+    }
 }
 
 } // namespace mserver::presentation

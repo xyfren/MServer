@@ -5,6 +5,7 @@
 #include "utils/json_helper.hpp"
 #include <filesystem>
 #include <fstream>
+#include <regex>
 #include <sstream>
 
 namespace mserver::presentation {
@@ -115,6 +116,10 @@ http::response<http::string_body> HttpHandler::handle(const http::request<http::
 
     if (route.path.rfind("/avatars/", 0) == 0 && req.method() == http::verb::get) {
         const std::string filename = route.path.substr(std::string("/avatars/").size());
+        static const std::regex avatarPattern(R"(^[0-9]+\.jpg$)");
+        if (!std::regex_match(filename, avatarPattern)) {
+            return makeJson(http::status::bad_request, {{"error", "invalid avatar name"}});
+        }
         std::ifstream in("storage/avatars/" + filename, std::ios::binary);
         if (!in) {
             return makeJson(http::status::not_found, {{"error", "avatar not found"}});

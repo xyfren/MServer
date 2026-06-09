@@ -46,8 +46,8 @@ void Database::runSchema(const std::string& schemaPath) {
     if (!hasBio) {
         db_->exec("ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ''");
     }
-    if (hasPassword) {
-        db_->exec("UPDATE users SET password_hash = password WHERE IFNULL(password_hash, '') = ''");
+    if (!hasPassword) {
+        db_->exec("ALTER TABLE users ADD COLUMN password TEXT DEFAULT ''");
     }
 }
 

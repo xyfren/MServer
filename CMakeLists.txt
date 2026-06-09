@@ -28,6 +28,7 @@ find_library(SQLITECPP_LIBRARY
 
 # Поиск SQLite3 (зависимость SQLiteCpp)
 find_library(SQLITE3_LIB sqlite3)
+find_package(OpenSSL REQUIRED)
 
 if(SQLITECPP_INCLUDE_DIR AND SQLITECPP_LIBRARY)
     set(SQLITECPP_FOUND TRUE)
@@ -62,6 +63,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ${SQLITECPP_LIBRARY}  # Сначала SQLiteCpp
     ${SQLITE3_LIB}        # Потом SQLite3
     ${Boost_LIBRARIES}
+    OpenSSL::Crypto
     pthread
     dl
 )

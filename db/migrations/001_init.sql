@@ -4,6 +4,7 @@
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE,
+    password TEXT DEFAULT '',
     password_hash TEXT NOT NULL,
     bio TEXT DEFAULT ''
 );

@@ -1,4 +1,5 @@
 #include "utils/config.hpp"
+#include "utils/logger.hpp"
 
 #include <fstream>
 
@@ -8,6 +9,7 @@ AppConfig loadConfig(const std::string& path) {
     AppConfig cfg;
     std::ifstream in(path);
     if (!in) {
+        Logger::log(LogLevel::WARN, "Config file not found, using defaults: " + path);
         return cfg;
     }
 

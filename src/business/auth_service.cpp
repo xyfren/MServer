@@ -9,7 +9,17 @@ AuthService::AuthService(persistence::dao::UserDao& userDao, persistence::dao::S
 
 std::optional<std::string> AuthService::login(const std::string& username, const std::string& password) {
     const auto user = userDao_.findByUsername(username);
-    if (!user || user->passwordHash != utils::hashPassword(password)) {
+    if (!user) {
+        return std::nullopt;
+    }
+
+    const std::string hashedInput = utils::hashPassword(password);
+    bool valid = user->passwordHash == hashedInput;
+    if (!valid && user->passwordHash.empty() && !user->legacyPassword.empty() && user->legacyPassword == password) {
+        userDao_.upgradeLegacyPassword(user->id, hashedInput);
+        valid = true;
+    }
+    if (!valid) {
         return std::nullopt;
     }
 

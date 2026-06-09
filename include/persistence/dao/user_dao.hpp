@@ -14,6 +14,7 @@ public:
     std::optional<models::User> findByUsername(const std::string& username);
     int create(const std::string& username, const std::string& passwordHash);
     bool updateProfile(int userId, const std::string& bio);
+    void upgradeLegacyPassword(int userId, const std::string& passwordHash);
 
 private:
     Database& db_;

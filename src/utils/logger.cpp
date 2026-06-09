@@ -22,8 +22,14 @@ const char* levelToString(LogLevel level) {
 void Logger::log(LogLevel level, const std::string& message) {
     const auto now = std::chrono::system_clock::now();
     const std::time_t ts = std::chrono::system_clock::to_time_t(now);
+    std::tm tm{};
+#if defined(_WIN32)
+    localtime_s(&tm, &ts);
+#else
+    localtime_r(&ts, &tm);
+#endif
     std::cout << "[" << levelToString(level) << "] "
-              << std::put_time(std::localtime(&ts), "%F %T") << " "
+              << std::put_time(&tm, "%F %T") << " "
               << message << std::endl;
 }
 
