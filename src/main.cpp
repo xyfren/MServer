@@ -1,52 +1,100 @@
-#include <iostream>
-#include <boost/signals2.hpp>
-#include <nlohmann/json.hpp>
-#include <SQLiteCpp/SQLiteCpp.h>
+#include "business/auth_service.hpp"
+#include "business/message_service.hpp"
+#include "business/user_service.hpp"
+#include "common/constants.hpp"
+#include "middleware/auth_middleware.hpp"
+#include "persistence/dao/message_dao.hpp"
+#include "persistence/dao/session_dao.hpp"
+#include "persistence/dao/user_dao.hpp"
+#include "persistence/database.hpp"
+#include "presentation/http_handler.hpp"
+#include "presentation/websocket_handler.hpp"
+#include "presentation/router.hpp"
+#include "utils/config.hpp"
+#include "utils/logger.hpp"
 
-#include "chatserver/ChatServer.h"
-#include "turnserver/TurnServer.h"
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/beast/http.hpp>
 
-using namespace std;
+#include <atomic>
+#include <thread>
 
-using namespace boost::placeholders;
+namespace beast = boost::beast;
+namespace http = beast::http;
+using tcp = boost::asio::ip::tcp;
 
-using json = nlohmann::json;
-using ordered_json = nlohmann::ordered_json;
-// сделать свой поток ошибок
-int main() {
+int main(int argc, char** argv) {
     try {
-        shared_ptr<DBManager> dbManager = make_shared<DBManager>();
-        
-        dbManager->createTable();
-        // Добавляем тестового пользователя
-        ordered_json param;
-        param["un"] = "admin";
-        param["pw"] = "admin";
-        dbManager->insert("INSERT INTO users (username,password) VALUES (:un,:pw)", param);
-        param["un"] = "misha";
-        param["pw"] = "12345";
-        dbManager->insert("INSERT INTO users (username,password) VALUES (:un,:pw)", param);
-        cout << dbManager->getUsers().dump() << endl;
-        
-        ChatServer chatServer(dbManager);
-        TurnServer turnServer(dbManager);
+        const std::string configPath = argc > 1 ? argv[1] : "config/app.conf";
+        const auto cfg = mserver::utils::loadConfig(configPath);
 
-        chatServer.m_sessionServer->createMediaSession.connect(boost::bind(&TurnServer::createMediaSession, &turnServer,_1,_2));
-        chatServer.m_sessionServer->deleteMediaSession.connect(boost::bind(&TurnServer::deleteMediaSession, &turnServer,_1));
-        chatServer.m_sessionServer->addCaller.connect(boost::bind(&TurnServer::addCaller, &turnServer,_1,_2,_3));
-        chatServer.m_sessionServer->addCallee.connect(boost::bind(&TurnServer::addCallee, &turnServer,_1,_2,_3));
-        chatServer.m_sessionServer->startMediaSession.connect(boost::bind(&TurnServer::startMediaSession, &turnServer,_1));
-        chatServer.m_sessionServer->getSsrc.connect(boost::bind(&TurnServer::getSsrc, &turnServer));
-        chatServer.m_sessionServer->getMediaSessionId.connect(boost::bind(&TurnServer::getMediaSessionId, &turnServer));
-        chatServer.m_sessionServer->getMediaSession.connect(boost::bind(&TurnServer::getMediaSession,&turnServer,_1));
+        mserver::persistence::Database db(cfg.dbPath);
+        db.runSchema("db/schema.sql");
 
-        turnServer.sessionStarted.connect(boost::bind(&SSPServer::onSessionStarted,chatServer.m_sessionServer.get(),_1));
-        
-        chatServer.run(12345);
-        turnServer.run(12346,12347);
+        mserver::persistence::dao::UserDao userDao(db);
+        mserver::persistence::dao::SessionDao sessionDao(db);
+        mserver::persistence::dao::MessageDao messageDao(db);
 
-    } catch (const exception& ex) {
-        cerr << "Error: " << ex.what() << endl;
+        mserver::business::AuthService authService(userDao, sessionDao);
+        mserver::business::UserService userService(userDao);
+        mserver::business::MessageService messageService(messageDao);
+        mserver::middleware::AuthMiddleware authMiddleware(authService);
+
+        mserver::presentation::HttpHandler httpHandler(authService, userService, messageService, authMiddleware);
+        mserver::presentation::WebSocketHandler websocketHandler;
+
+        boost::asio::io_context ioc{1};
+        tcp::acceptor acceptor{ioc, {tcp::v4(), cfg.httpPort ? cfg.httpPort : mserver::common::kDefaultHttpPort}};
+        mserver::utils::Logger::log(mserver::utils::LogLevel::INFO, "Server started on port " + std::to_string(acceptor.local_endpoint().port()));
+        constexpr int kMaxConcurrentConnections = 64;
+        std::atomic<int> activeConnections{0};
+
+        for (;;) {
+            tcp::socket socket{ioc};
+            acceptor.accept(socket);
+
+            if (activeConnections.load() >= kMaxConcurrentConnections) {
+                http::response<http::string_body> busy{http::status::service_unavailable, 11};
+                busy.set(http::field::content_type, "application/json");
+                busy.body() = R"({"error":"server is busy"})";
+                busy.prepare_payload();
+                http::write(socket, busy);
+                beast::error_code ec;
+                socket.shutdown(tcp::socket::shutdown_send, ec);
+                continue;
+            }
+
+            activeConnections.fetch_add(1);
+            std::thread([s = std::move(socket), &httpHandler, &websocketHandler, &activeConnections]() mutable {
+                struct ConnectionGuard {
+                    std::atomic<int>& counter;
+                    ~ConnectionGuard() { counter.fetch_sub(1); }
+                } guard{activeConnections};
+                try {
+                    beast::flat_buffer buffer;
+                    http::request<http::string_body> req;
+                    http::read(s, buffer, req);
+
+                    if (beast::websocket::is_upgrade(req)) {
+                        const auto route = mserver::presentation::splitPathAndQuery(std::string(req.target()));
+                        if (route.path == "/chat" || route.path == "/notifications") {
+                            websocketHandler.handle(std::move(s), std::move(req));
+                        }
+                        return;
+                    }
+
+                    const auto response = httpHandler.handle(req);
+                    http::write(s, response);
+                    beast::error_code ec;
+                    s.shutdown(tcp::socket::shutdown_send, ec);
+                } catch (const std::exception& ex) {
+                    mserver::utils::Logger::log(mserver::utils::LogLevel::WARN, ex.what());
+                }
+            }).detach();
+        }
+    } catch (const std::exception& ex) {
+        mserver::utils::Logger::log(mserver::utils::LogLevel::ERROR, ex.what());
         return 1;
     }
 }

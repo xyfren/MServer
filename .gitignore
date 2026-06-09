@@ -13,3 +13,4 @@ build/
 db/
 include/
 .vscode/
+db/test.db
