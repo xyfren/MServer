@@ -4,8 +4,6 @@
 #include <memory>
 #include <string>
 
-namespace mserver::persistence {
-
 class Database {
 public:
     explicit Database(const std::string& dbPath);
@@ -16,5 +14,3 @@ public:
 private:
     std::unique_ptr<SQLite::Database> db_;
 };
-
-} // namespace mserver::persistence

@@ -1,6 +1,4 @@
-#include "persistence/dao/SessionDao.hpp"
-
-namespace mserver::persistence::dao {
+#include "SessionDao.hpp"
 
 SessionDao::SessionDao(Database& db) : db_(db) {}
 
@@ -27,5 +25,3 @@ void SessionDao::remove(const std::string& token) {
     q.bind(1, token);
     q.exec();
 }
-
-} // namespace mserver::persistence::dao

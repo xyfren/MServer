@@ -1,0 +1,13 @@
+[requires]
+boost/1.91.0
+nlohmann_json/3.11.3
+
+[options]
+boost/1.91.0:without_cobalt=True
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
+[layout]
+cmake_layout

@@ -1,11 +1,9 @@
-#include "persistence/Database.hpp"
+#include "Database.hpp"
 
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
 #include <string>
-
-namespace mserver::persistence {
 
 Database::Database(const std::string& dbPath)
     : db_(std::make_unique<SQLite::Database>(dbPath, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE)) {}
@@ -50,5 +48,3 @@ void Database::runSchema(const std::string& schemaPath) {
         db_->exec("ALTER TABLE users ADD COLUMN password TEXT DEFAULT ''");
     }
 }
-
-} // namespace mserver::persistence

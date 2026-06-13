@@ -6,8 +6,8 @@
 #include <string>
 
 class AuthService {
-    IUserRepository& user_repo_;
-    ISessionRepository& session_store_;
+    IUserRepository& userRepo_;
+    ISessionRepository& sessionStore_;
 
     std::string GenerateSessionId() {
         return "sess_" + std::to_string(std::rand()); // В реальности используйте криптостойкий UUID
@@ -18,24 +18,22 @@ class AuthService {
     }
 
 public:
-    AuthService(IUserRepository& user_repo, ISessionRepository& session_store)
-        : user_repo_(user_repo), session_store_(session_store) {}
+    AuthService(IUserRepository& user_repo, ISessionRepository& sessionStore)
+        : userRepo_(user_repo), sessionStore_(sessionStore) {}
 
     net::awaitable<std::string> Login(const std::string& login, const std::string& password) {
-        // 1. Ищем пользователя
-        auto user_opt = co_await user_repo_.getUserByLogin(login);
+        auto user_opt = co_await userRepo_.getUserByLogin(login);
         if (!user_opt.has_value()) {
             throw std::invalid_argument("User not found");
         }
 
-        // 2. Проверяем пароль
-        if (!VerifyPassword(password, user_opt->password_hash)) {
+        if (!VerifyPassword(password, user_opt->passwordHash)) {
             throw std::invalid_argument("Invalid password");
         }
 
         // 3. Создаем сессию
         std::string session_id = GenerateSessionId();
-        co_await session_store_.saveSession(session_id, user_opt->id);
+        co_await sessionStore_.saveSession(session_id, user_opt->id);
 
         // 4. Возвращаем токен сессии
         co_return session_id;

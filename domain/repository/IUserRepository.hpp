@@ -1,6 +1,6 @@
 #pragma once
 
-#include <common/Common.hpp>
+#include <domain/common/Common.hpp>
 #include <domain/models/User.hpp>
 
 class IUserRepository {

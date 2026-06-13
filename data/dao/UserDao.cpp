@@ -1,10 +1,8 @@
-#include "persistence/dao/UserDao.hpp"
-
-namespace mserver::persistence::dao {
+#include "UserDao.hpp"
 
 UserDao::UserDao(Database& db) : db_(db) {}
 
-std::optional<models::User> UserDao::findById(int userId) {
+std::optional<User> UserDao::findById(int userId) {
     SQLite::Statement q(db_.handle(),
                         "SELECT id, username, IFNULL(password_hash, ''), IFNULL(password, ''), IFNULL(bio, '') "
                         "FROM users WHERE id = ?");
@@ -13,7 +11,7 @@ std::optional<models::User> UserDao::findById(int userId) {
         return std::nullopt;
     }
 
-    return models::User{
+    return User{
         q.getColumn(0).getInt(),
         q.getColumn(1).getString(),
         q.getColumn(2).getString(),
@@ -21,7 +19,7 @@ std::optional<models::User> UserDao::findById(int userId) {
         q.getColumn(4).getString()};
 }
 
-std::optional<models::User> UserDao::findByUsername(const std::string& username) {
+std::optional<User> UserDao::findByUsername(const std::string& username) {
     SQLite::Statement q(db_.handle(),
                         "SELECT id, username, IFNULL(password_hash, ''), IFNULL(password, ''), IFNULL(bio, '') "
                         "FROM users WHERE username = ?");
@@ -30,7 +28,7 @@ std::optional<models::User> UserDao::findByUsername(const std::string& username)
         return std::nullopt;
     }
 
-    return models::User{
+    return User{
         q.getColumn(0).getInt(),
         q.getColumn(1).getString(),
         q.getColumn(2).getString(),
@@ -60,5 +58,3 @@ void UserDao::upgradeLegacyPassword(int userId, const std::string& passwordHash)
     q.bind(2, userId);
     q.exec();
 }
-
-} // namespace mserver::persistence::dao

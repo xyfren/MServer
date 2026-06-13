@@ -1,6 +1,6 @@
 #pragma once
 
-#include <common/Common.hpp>
+#include <domain/common/Common.hpp>
 
 class ISessionRepository {
 public:

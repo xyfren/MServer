@@ -1,10 +1,8 @@
 #pragma once
 
-#include "persistence/Database.hpp"
+#include <data/Database.hpp>
 #include <optional>
 #include <string>
-
-namespace mserver::persistence::dao {
 
 class SessionDao {
 public:
@@ -17,5 +15,3 @@ public:
 private:
     Database& db_;
 };
-
-} // namespace mserver::persistence::dao

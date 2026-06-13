@@ -1,8 +1,11 @@
+#pragma once
+
 #include <string>
-#include <stdint.h>
 
 struct User {
-    uint64_t id;
-    std::string login;
-    std::string password_hash;
+    int id{};
+    std::string username;
+    std::string passwordHash;
+    std::string legacyPassword;
+    std::string bio;
 };
