@@ -11,8 +11,8 @@
 #include <boost/signals2.hpp>
 
 #include "common/DBManager.h"
-#include "packets/clientPacket.h"
-#include "packets/serverPacket.h"
+#include "packets/ClientPacket.h"
+#include "packets/ServerPacket.h"
 
 using ordered_json = nlohmann::ordered_json;
 

@@ -1,4 +1,4 @@
-#include "persistence/dao/user_dao.hpp"
+#include "persistence/dao/UserDao.hpp"
 
 namespace mserver::persistence::dao {
 

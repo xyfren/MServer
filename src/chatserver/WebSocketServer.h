@@ -16,8 +16,8 @@
 #include <memory>
 #include <thread>
 
-#include "packets/serverPacket.h"
-#include "packets/clientPacket.h"
+#include "packets/ServerPacket.h"
+#include "packets/ClientPacket.h"
 
 using ordered_json = nlohmann::ordered_json;
 

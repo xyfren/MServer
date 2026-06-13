@@ -1,6 +1,6 @@
-#include "presentation/websocket_handler.hpp"
+#include "presentation/WebSocketHandler.hpp"
 
-#include "utils/logger.hpp"
+#include "utils/Logger.hpp"
 #include <boost/beast/core/flat_buffer.hpp>
 
 namespace mserver::presentation {

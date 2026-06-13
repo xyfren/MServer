@@ -1,4 +1,4 @@
-#include "persistence/dao/message_dao.hpp"
+#include "persistence/dao/MessageDao.hpp"
 
 namespace mserver::persistence::dao {
 

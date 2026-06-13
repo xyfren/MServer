@@ -1,7 +1,7 @@
 #pragma once
 
 #include "business/auth_service.hpp"
-#include "business/message_service.hpp"
+#include "business/Message_service.hpp"
 #include "business/user_service.hpp"
 #include "middleware/auth_middleware.hpp"
 #include <boost/beast/http.hpp>

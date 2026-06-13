@@ -1,7 +1,7 @@
 #pragma once
 
-#include "persistence/database.hpp"
-#include "persistence/models/message.hpp"
+#include "persistence/Database.hpp"
+#include "persistence/models/Message.hpp"
 #include <vector>
 
 namespace mserver::persistence::dao {

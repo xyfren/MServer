@@ -1,4 +1,4 @@
-#include <domain/common/common.hpp>
+#include <domain/common/Common.hpp>
 
 #include <controller/AuthController.hpp>
 

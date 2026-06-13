@@ -1,5 +1,5 @@
-#include "utils/config.hpp"
-#include "utils/logger.hpp"
+#include "utils/Config.hpp"
+#include "utils/Logger.hpp"
 
 #include <fstream>
 

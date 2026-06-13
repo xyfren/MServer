@@ -1,6 +1,6 @@
 #pragma once
 
-#include "persistence/database.hpp"
+#include "persistence/Database.hpp"
 #include <optional>
 #include <string>
 

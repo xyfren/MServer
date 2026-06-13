@@ -10,8 +10,8 @@
 #include "SSP.h"
 #include "common/Constants.h"
 #include "SDP.h"
-#include "packets/clientPacket.h"
-#include "packets/serverPacket.h"
+#include "packets/ClientPacket.h"
+#include "packets/ServerPacket.h"
 #include "turnserver/TurnServer.h"
 
 using namespace std;
